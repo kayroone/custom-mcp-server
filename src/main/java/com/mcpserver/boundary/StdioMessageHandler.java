@@ -11,6 +11,20 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 
+/**
+ * Stdio Message Handler - Kommunikation über stdin/stdout.
+ * <p>
+ * Diese Klasse verwaltet die Kommunikation mit MCP Clients über Standard Input/Output.
+ * Sie liest JSON-RPC Requests zeilenweise von stdin und schreibt JSON-RPC Responses nach stdout.
+ * </p>
+ * <p>
+ * <strong>Wichtig:</strong> Alle Logs werden nach stderr geschrieben, um stdout sauber
+ * zu halten (nur JSON-RPC Messages). Schreiben nach stdout würde die Kommunikation brechen.
+ * </p>
+ *
+ * @see JsonRpcRequest
+ * @see JsonRpcResponse
+ */
 @Slf4j
 @Component
 public class StdioMessageHandler {
@@ -25,6 +39,16 @@ public class StdioMessageHandler {
         this.writer = new PrintWriter(System.out, true);
     }
 
+    /**
+     * Liest eine JSON-RPC Request von stdin.
+     * <p>
+     * Blockiert bis eine Zeile verfügbar ist oder stdin geschlossen wird.
+     * Leere Zeilen werden ignoriert.
+     * </p>
+     *
+     * @return JsonRpcRequest Objekt oder null wenn stdin geschlossen wurde
+     * @throws IOException Bei Lese-Fehlern
+     */
     public JsonRpcRequest readRequest() throws IOException {
         String line = reader.readLine();
 
@@ -36,6 +60,16 @@ public class StdioMessageHandler {
         return objectMapper.readValue(line, JsonRpcRequest.class);
     }
 
+    /**
+     * Schreibt eine JSON-RPC Response nach stdout.
+     * <p>
+     * Die Response wird als JSON-String serialisiert und als einzelne Zeile geschrieben.
+     * Nach dem Schreiben wird stdout geflusht, um sofortiges Senden sicherzustellen.
+     * </p>
+     *
+     * @param response Die zu sendende JSON-RPC Response
+     * @throws IOException Bei Schreib-Fehlern
+     */
     public void writeResponse(JsonRpcResponse response) throws IOException {
         String json = objectMapper.writeValueAsString(response);
         log.debug("Sending: {}", json);

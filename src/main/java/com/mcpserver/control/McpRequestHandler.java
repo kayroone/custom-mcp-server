@@ -12,6 +12,18 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * MCP Request Handler - Verarbeitet eingehende MCP-Requests.
+ * <p>
+ * Diese Klasse implementiert die MCP-Protokoll-Logik und routet Requests
+ * zu den entsprechenden Handler-Methoden:
+ * <ul>
+ *   <li>initialize - Server-Handshake und Capability-Negotiation</li>
+ *   <li>tools/list - Gibt verfügbare Tools zurück</li>
+ *   <li>tools/call - Führt ein Tool aus</li>
+ * </ul>
+ * </p>
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -35,6 +47,16 @@ public class McpRequestHandler {
 
     private final ObjectMapper objectMapper;
 
+    /**
+     * Verarbeitet eine JSON-RPC Request und gibt die entsprechende Response zurück.
+     * <p>
+     * Routet die Request basierend auf der method zu den spezifischen Handler-Methoden.
+     * Bei unbekannten Methoden wird ein "Method not found" Fehler zurückgegeben.
+     * </p>
+     *
+     * @param request Die eingehende JSON-RPC Request
+     * @return Die JSON-RPC Response (entweder Erfolg oder Fehler)
+     */
     public JsonRpcResponse handleRequest(JsonRpcRequest request) {
         log.info("Handling method: {}", request.getMethod());
 
@@ -57,6 +79,16 @@ public class McpRequestHandler {
         }
     }
 
+    /**
+     * Behandelt die initialize-Request.
+     * <p>
+     * Dies ist der erste Handshake zwischen Client und Server.
+     * Der Server antwortet mit Server-Informationen und der unterstützten Protokoll-Version.
+     * </p>
+     *
+     * @param request Die initialize-Request
+     * @return Response mit Server-Informationen
+     */
     private JsonRpcResponse handleInitialize(JsonRpcRequest request) {
         log.info("Initialize request received");
 
@@ -73,6 +105,20 @@ public class McpRequestHandler {
         return JsonRpcResponse.success(request.getId(), result);
     }
 
+    /**
+     * Behandelt die tools/list Request.
+     * <p>
+     * Gibt eine Liste aller verfügbaren Tools zurück. Jedes Tool enthält:
+     * <ul>
+     *   <li>name - Eindeutiger Tool-Name</li>
+     *   <li>description - Was das Tool macht</li>
+     *   <li>inputSchema - JSON Schema für die erwarteten Parameter</li>
+     * </ul>
+     * </p>
+     *
+     * @param request Die tools/list Request
+     * @return Response mit Tool-Liste
+     */
     private JsonRpcResponse handleToolsList(JsonRpcRequest request) {
         log.info("Tools list request received");
 
@@ -95,6 +141,16 @@ public class McpRequestHandler {
         return JsonRpcResponse.success(request.getId(), result);
     }
 
+    /**
+     * Behandelt die tools/call Request.
+     * <p>
+     * Führt das angeforderte Tool mit den übergebenen Argumenten aus.
+     * Das Ergebnis wird im MCP Content-Format zurückgegeben (Liste von Content-Objekten).
+     * </p>
+     *
+     * @param request Die tools/call Request mit Tool-Name und Argumenten
+     * @return Response mit Tool-Ergebnis oder Fehler falls Tool nicht gefunden
+     */
     private JsonRpcResponse handleToolsCall(JsonRpcRequest request) {
         log.info("Tools call request received");
 
