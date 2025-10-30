@@ -61,6 +61,39 @@ Der Server implementiert die folgenden MCP-Kernkonzepte:
 - **Tools**: Funktionen, die der Client aufrufen kann (z.B. `echo`)
 - **Initialize Handshake**: Capability-Negotiation beim Server-Start
 
+## Wie funktioniert MCP?
+
+Das folgende Sequenzdiagramm zeigt den kompletten Ablauf einer MCP-Interaktion:
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Client as Claude Desktop<br/>(MCP Client)
+    participant LLM as Claude LLM
+    participant Server as MCP Server<br/>(Java)
+
+    Client->>Server: initialize
+    Server-->>Client: Server Info + Capabilities
+
+    Client->>Server: tools/list
+    Server-->>Client: Tools (name, description, inputSchema)
+    Client->>LLM: Tools verfügbar machen
+
+    User->>Client: "Lese todo.txt"
+    Client->>LLM: User-Anfrage + Tools
+
+    Note over LLM: Analysiert und wählt<br/>passendes Tool
+
+    LLM->>Client: Tool Call: read_file
+    Client->>Server: tools/call {name: "read_file", arguments: {...}}
+    Server->>Server: Datei lesen
+    Server-->>Client: Tool Result (Dateiinhalt)
+
+    Client->>LLM: Tool-Ergebnis
+    LLM->>Client: Generierte Antwort
+    Client->>User: "In deiner todo.txt steht: ..."
+```
+
 ## Aktueller Stand
 
 Implementierte Features:
